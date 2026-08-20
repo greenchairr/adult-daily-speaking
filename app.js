@@ -1,19 +1,22 @@
 let currentAudio = null;
 let currentActiveButton = null;
 
+// Voice recording state
+let mediaRecorder = null;
+let audioChunks = [];
+let activeRecordingButton = null;
+
 function initApp() {
   const unitGrid = document.getElementById("unit-grid");
   const btnBack = document.getElementById("btn-back");
 
-  // Check both window.allUnits and local allUnits
   const units = window.allUnits || (typeof allUnits !== "undefined" ? allUnits : null);
 
   if (!units || units.length === 0) {
-    unitGrid.innerHTML = `<p style="text-align:center; color:#64748b;">No units found. Please check units.js.</p>`;
+    unitGrid.innerHTML = `<p style="text-align:center; color:#64748b;">Chưa tìm thấy bài học nào.</p>`;
     return;
   }
 
-  // Render main screen unit buttons
   unitGrid.innerHTML = "";
   units.forEach((unit) => {
     const btn = document.createElement("button");
@@ -26,9 +29,9 @@ function initApp() {
     unitGrid.appendChild(btn);
   });
 
-  // Back button functionality
   btnBack.onclick = () => {
     stopCurrentAudio();
+    stopRecording();
     showView("view-home");
   };
 }
@@ -38,9 +41,7 @@ function showView(viewId) {
     view.classList.remove("active");
   });
   const targetView = document.getElementById(viewId);
-  if (targetView) {
-    targetView.classList.add("active");
-  }
+  if (targetView) targetView.classList.add("active");
   window.scrollTo(0, 0);
 }
 
@@ -58,12 +59,12 @@ function openUnit(unitInfo) {
       renderUnitDetail(unitData);
       showView("view-unit");
     } else {
-      alert("Unit file loaded, but window.currentUnitData was not found inside " + unitInfo.path);
+      alert("Không tìm thấy dữ liệu bài học.");
     }
   };
 
   script.onerror = () => {
-    alert("Could not load unit data. File not found: " + unitInfo.path);
+    alert("Lỗi tải tệp: " + unitInfo.path);
   };
 
   document.body.appendChild(script);
@@ -85,11 +86,17 @@ function renderUnitDetail(unit) {
         ${item.chunk ? `<div class="card-chunk">🧩 <strong>Cụm:</strong> ${item.chunk}</div>` : ""}
         ${item.cue ? `<div class="card-cue">🚦 <strong>Ra hiệu:</strong> ${item.cue}</div>` : ""}
       </div>
-      <button class="play-btn" title="Listen">🔊</button>
+      <div class="card-actions">
+        <button class="btn-action play-btn" title="Nghe mẫu">🔊</button>
+        <button class="btn-action record-btn" title="Ghi âm giọng của bạn">🎙️</button>
+      </div>
     `;
 
     const playBtn = card.querySelector(".play-btn");
+    const recordBtn = card.querySelector(".record-btn");
+
     playBtn.onclick = () => playAudio(item.audio, playBtn);
+    recordBtn.onclick = () => handleRecordToggle(recordBtn);
 
     list.appendChild(card);
   });
@@ -126,30 +133,81 @@ function stopCurrentAudio() {
   }
 }
 
-// Ensures initialization runs even if DOMContentLoaded already fired
-if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", initApp);
-} else {
-  initApp();
+// Student Recording & Playback
+async function handleRecordToggle(btn) {
+  // If button already has a saved recording, tapping it plays the recorded voice
+  if (btn.dataset.audioUrl && !btn.classList.contains("recording")) {
+    playAudio(btn.dataset.audioUrl, btn);
+    return;
+  }
+
+  // If currently recording on this button, stop recording
+  if (mediaRecorder && mediaRecorder.state === "recording") {
+    mediaRecorder.stop();
+    return;
+  }
+
+  // Stop other audio
+  stopCurrentAudio();
+
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    audioChunks = [];
+    mediaRecorder = new MediaRecorder(stream);
+    activeRecordingButton = btn;
+
+    mediaRecorder.ondataavailable = (event) => {
+      audioChunks.push(event.data);
+    };
+
+    mediaRecorder.onstop = () => {
+      const audioBlob = new Blob(audioChunks, { type: "audio/mp4" });
+      const audioUrl = URL.createObjectURL(audioBlob);
+
+      btn.dataset.audioUrl = audioUrl;
+      btn.classList.remove("recording");
+      btn.classList.add("has-recording");
+      btn.innerHTML = "▶️";
+      btn.title = "Nghe lại giọng của bạn";
+
+      // Release microphone tracks
+      stream.getTracks().forEach((track) => track.stop());
+      mediaRecorder = null;
+    };
+
+    mediaRecorder.start();
+    btn.classList.add("recording");
+    btn.innerHTML = "⏹️";
+    btn.title = "Dừng ghi âm";
+  } catch (err) {
+    console.error("Microphone access denied:", err);
+    alert("Vui lòng cấp quyền truy cập Micro trên trình duyệt để ghi âm.");
+  }
 }
 
-// Block iOS double-tap to zoom
+function stopRecording() {
+  if (mediaRecorder && mediaRecorder.state === "recording") {
+    mediaRecorder.stop();
+  }
+}
+
+// Block iOS double-tap zoom
 let lastTouchEnd = 0;
-document.addEventListener('touchend', function (event) {
-  const now = (new Date()).getTime();
+document.addEventListener("touchend", function (event) {
+  const now = new Date().getTime();
   if (now - lastTouchEnd <= 300) {
     event.preventDefault();
   }
   lastTouchEnd = now;
 }, false);
 
-// Block multi-finger pinch-to-zoom gestures
-document.addEventListener('gesturestart', function (e) {
-  e.preventDefault();
-});
-document.addEventListener('gesturechange', function (e) {
-  e.preventDefault();
-});
-document.addEventListener('gestureend', function (e) {
-  e.preventDefault();
-});
+// Block pinch-to-zoom
+document.addEventListener("gesturestart", (e) => e.preventDefault());
+document.addEventListener("gesturechange", (e) => e.preventDefault());
+document.addEventListener("gestureend", (e) => e.preventDefault());
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initApp);
+} else {
+  initApp();
+}
