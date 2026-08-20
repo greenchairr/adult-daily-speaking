@@ -67,11 +67,9 @@ function renderUnit(unit) {
 }
 
 // Generates natural AI voice directly from the text
-async function speakSentence(text, buttonElement) {
-  // Stop previous playback if a student clicks another sentence quickly
-  if (currentAudio) {
-    currentAudio.pause();
-    currentAudio.currentTime = 0;
+function speakSentence(text, buttonElement) {
+  if (responsiveVoice.isPlaying()) {
+    responsiveVoice.cancel();
     if (currentActiveButton) {
       currentActiveButton.classList.remove("playing");
     }
@@ -80,22 +78,16 @@ async function speakSentence(text, buttonElement) {
   currentActiveButton = buttonElement;
   buttonElement.classList.add("playing");
 
-  try {
-    const audio = await puter.ai.txt2speech(text, {
-      model: "elevenlabs",
-      voice: "Rachel"
-    });
-
-    currentAudio = audio;
-    audio.play();
-
-    audio.onended = () => {
+  // Uses high-quality Cloud US English Female/Male
+  responsiveVoice.speak(text, "US English Female", {
+    rate: 0.9,
+    onend: () => {
       buttonElement.classList.remove("playing");
-    };
-  } catch (error) {
-    console.error("TTS Error:", error);
-    buttonElement.classList.remove("playing");
-  }
+    },
+    onerror: () => {
+      buttonElement.classList.remove("playing");
+    }
+  });
 }
 
 document.addEventListener("DOMContentLoaded", initApp);
