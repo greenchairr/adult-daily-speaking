@@ -22,13 +22,13 @@ function initApp() {
 }
 
 function loadUnit(unitInfo) {
-  // Remove previously injected unit script if it exists
+  // Remove previously loaded unit script if it exists
   const oldScript = document.getElementById("dynamic-unit-script");
   if (oldScript) oldScript.remove();
 
   const script = document.createElement("script");
   script.id = "dynamic-unit-script";
-  script.src = unitInfo.path + "?v=" + Date.now(); // Prevents browser cache issues
+  script.src = unitInfo.path + "?v=" + Date.now(); // Prevent caching
   
   script.onload = () => {
     if (window.currentUnitData) {
@@ -59,13 +59,16 @@ function renderUnit(unit) {
     `;
 
     const playBtn = card.querySelector(".play-btn");
-    playBtn.onclick = () => playAudio(item.audio, playBtn);
+    // Connects the play button directly to the AI text-to-speech engine
+    playBtn.onclick = () => speakSentence(item.en, playBtn);
 
     list.appendChild(card);
   });
 }
 
-function playAudio(audioSrc, buttonElement) {
+// Generates natural AI voice directly from the text
+async function speakSentence(text, buttonElement) {
+  // Stop previous playback if a student clicks another sentence quickly
   if (currentAudio) {
     currentAudio.pause();
     currentAudio.currentTime = 0;
@@ -74,19 +77,25 @@ function playAudio(audioSrc, buttonElement) {
     }
   }
 
-  const audio = new Audio(audioSrc);
-  currentAudio = audio;
   currentActiveButton = buttonElement;
   buttonElement.classList.add("playing");
 
-  audio.play().catch(err => {
-    console.error("Audio playback error:", err);
-    buttonElement.classList.remove("playing");
-  });
+  try {
+    const audio = await puter.ai.txt2speech(text, {
+      model: "elevenlabs",
+      voice: "Rachel"
+    });
 
-  audio.onended = () => {
+    currentAudio = audio;
+    audio.play();
+
+    audio.onended = () => {
+      buttonElement.classList.remove("playing");
+    };
+  } catch (error) {
+    console.error("TTS Error:", error);
     buttonElement.classList.remove("playing");
-  };
+  }
 }
 
 document.addEventListener("DOMContentLoaded", initApp);
