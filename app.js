@@ -5,11 +5,17 @@ function initApp() {
   const unitGrid = document.getElementById("unit-grid");
   const btnBack = document.getElementById("btn-back");
 
-  if (!window.allUnits || window.allUnits.length === 0) return;
+  // Check both window.allUnits and local allUnits
+  const units = window.allUnits || (typeof allUnits !== "undefined" ? allUnits : null);
+
+  if (!units || units.length === 0) {
+    unitGrid.innerHTML = `<p style="text-align:center; color:#64748b;">No units found. Please check units.js.</p>`;
+    return;
+  }
 
   // Render main screen unit buttons
   unitGrid.innerHTML = "";
-  window.allUnits.forEach((unit) => {
+  units.forEach((unit) => {
     const btn = document.createElement("button");
     btn.className = "unit-card-btn";
     btn.innerHTML = `
@@ -31,29 +37,33 @@ function showView(viewId) {
   document.querySelectorAll(".view").forEach((view) => {
     view.classList.remove("active");
   });
-  document.getElementById(viewId).classList.add("active");
+  const targetView = document.getElementById(viewId);
+  if (targetView) {
+    targetView.classList.add("active");
+  }
   window.scrollTo(0, 0);
 }
 
 function openUnit(unitInfo) {
-  // Clean up any previously injected script
   const oldScript = document.getElementById("dynamic-unit-script");
   if (oldScript) oldScript.remove();
 
-  // Dynamically load the unit's data.js
   const script = document.createElement("script");
   script.id = "dynamic-unit-script";
   script.src = unitInfo.path + "?v=" + Date.now();
 
   script.onload = () => {
-    if (window.currentUnitData) {
-      renderUnitDetail(window.currentUnitData);
+    const unitData = window.currentUnitData || (typeof currentUnitData !== "undefined" ? currentUnitData : null);
+    if (unitData) {
+      renderUnitDetail(unitData);
       showView("view-unit");
+    } else {
+      alert("Unit file loaded, but window.currentUnitData was not found inside " + unitInfo.path);
     }
   };
 
   script.onerror = () => {
-    alert("Could not load unit data. Please check the file path: " + unitInfo.path);
+    alert("Could not load unit data. File not found: " + unitInfo.path);
   };
 
   document.body.appendChild(script);
@@ -116,4 +126,9 @@ function stopCurrentAudio() {
   }
 }
 
-document.addEventListener("DOMContentLoaded", initApp);
+// Ensures initialization runs even if DOMContentLoaded already fired
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initApp);
+} else {
+  initApp();
+}
