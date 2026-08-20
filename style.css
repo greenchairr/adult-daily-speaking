@@ -1,17 +1,3 @@
-/* Disable pinch-to-zoom and gesture actions */
-html, body {
-  touch-action: pan-x pan-y;
-  -webkit-touch-callout: none;
-  -webkit-user-select: none;
-  user-select: none;
-  overflow-x: hidden;
-}
-
-/* Ensure buttons/cards don't trigger iOS double-tap delay/zoom */
-button, .unit-card-btn, .card, .play-btn {
-  touch-action: manipulation;
-}
-
 :root {
   --primary: #2563eb;
   --primary-hover: #1d4ed8;
@@ -22,6 +8,7 @@ button, .unit-card-btn, .card, .play-btn {
   --chunk-bg: #f0f9ff;
   --chunk-text: #0369a1;
   --accent: #10b981;
+  --recording: #ef4444;
   --border: #e2e8f0;
 }
 
@@ -33,12 +20,14 @@ button, .unit-card-btn, .card, .play-btn {
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Prevent double-tap zoom and pull-down bounce */
 html, body {
+  touch-action: pan-x pan-y;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  overflow-x: hidden;
   background-color: var(--bg);
   color: var(--text-main);
-  touch-action: pan-y;
-  -webkit-text-size-adjust: 100%;
 }
 
 body {
@@ -52,7 +41,10 @@ body {
   max-width: 600px;
 }
 
-/* Screen Transitions */
+button, .unit-card-btn, .card, .btn-action {
+  touch-action: manipulation;
+}
+
 .view {
   display: none;
 }
@@ -67,7 +59,6 @@ body {
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* Home View */
 .home-header {
   text-align: center;
   margin-bottom: 24px;
@@ -101,7 +92,6 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  transition: transform 0.1s ease, border-color 0.2s ease;
 }
 
 .unit-card-btn:active {
@@ -120,7 +110,6 @@ body {
   font-size: 1.2rem;
 }
 
-/* Detail View */
 .detail-header {
   display: flex;
   align-items: center;
@@ -147,12 +136,11 @@ body {
 }
 
 #detail-unit-title {
-  font-size: 1.25rem;
+  font-size: 1.2rem;
   font-weight: 700;
   color: var(--text-main);
 }
 
-/* Sentence Cards */
 .sentence-list {
   display: flex;
   flex-direction: column;
@@ -168,7 +156,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 14px;
+  gap: 12px;
 }
 
 .card-text {
@@ -185,7 +173,7 @@ body {
 .card-vi {
   font-size: 0.92rem;
   color: var(--text-sub);
-  margin-bottom: 6px;
+  margin-bottom: 4px;
 }
 
 .card-chunk {
@@ -206,26 +194,58 @@ body {
   line-height: 1.4;
 }
 
-.play-btn {
-  background: var(--primary);
-  color: #fff;
+.card-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.btn-action {
   border: none;
-  width: 48px;
-  height: 48px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.2rem;
-  flex-shrink: 0;
+  font-size: 1.15rem;
   transition: transform 0.1s ease, background-color 0.2s ease;
 }
 
-.play-btn:active {
+.btn-action:active {
   transform: scale(0.9);
+}
+
+.play-btn {
+  background: var(--primary);
+  color: #fff;
 }
 
 .play-btn.playing {
   background: var(--accent);
+}
+
+.record-btn {
+  background: #f1f5f9;
+  color: var(--text-main);
+  border: 1px solid var(--border);
+}
+
+.record-btn.recording {
+  background: var(--recording);
+  color: #fff;
+  animation: pulse 1s infinite alternate;
+}
+
+.record-btn.has-recording {
+  background: #ecfdf5;
+  color: #059669;
+  border-color: #a7f3d0;
+}
+
+@keyframes pulse {
+  from { transform: scale(1); }
+  to { transform: scale(1.08); }
 }
