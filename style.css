@@ -8,7 +8,8 @@
   --chunk-bg: #f0f9ff;
   --chunk-text: #0369a1;
   --accent: #10b981;
-  --recording: #ef4444;
+  --recording: #dc2626;
+  --re-record: #f59e0b;
   --border: #e2e8f0;
 }
 
@@ -154,13 +155,12 @@ button, .unit-card-btn, .card, .btn-action {
   border-radius: 14px;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.04);
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
   gap: 12px;
 }
 
 .card-text {
-  flex: 1;
+  width: 100%;
 }
 
 .card-en {
@@ -194,58 +194,77 @@ button, .unit-card-btn, .card, .btn-action {
   line-height: 1.4;
 }
 
+/* Actions Row */
 .card-actions {
   display: flex;
   align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
+  gap: 10px;
+  border-top: 1px solid #f1f5f9;
+  padding-top: 10px;
 }
 
 .btn-action {
   border: none;
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
+  height: 40px;
+  padding: 0 14px;
+  border-radius: 20px;
   cursor: pointer;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.15rem;
+  gap: 6px;
+  font-size: 0.9rem;
+  font-weight: 600;
   transition: transform 0.1s ease, background-color 0.2s ease;
 }
 
 .btn-action:active {
-  transform: scale(0.9);
+  transform: scale(0.94);
 }
 
+/* Model Audio Button */
 .play-btn {
   background: var(--primary);
   color: #fff;
 }
 
 .play-btn.playing {
-  background: var(--accent);
+  background: #0284c7;
 }
 
+/* Record Button - High Contrast Red/Dark */
 .record-btn {
-  background: #f1f5f9;
-  color: var(--text-main);
-  border: 1px solid var(--border);
+  background: #fee2e2;
+  color: var(--recording);
+  border: 1px solid #fecaca;
 }
 
 .record-btn.recording {
   background: var(--recording);
-  color: #fff;
+  color: #ffffff;
   animation: pulse 1s infinite alternate;
 }
 
-.record-btn.has-recording {
-  background: #ecfdf5;
-  color: #059669;
-  border-color: #a7f3d0;
+/* Play Student Voice Button */
+.user-play-btn {
+  background: #dcfce7;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+}
+
+.user-play-btn.playing {
+  background: #15803d;
+  color: #ffffff;
+}
+
+/* Re-record Button */
+.re-record-btn {
+  background: #fef3c7;
+  color: #b45309;
+  border: 1px solid #fde68a;
 }
 
 @keyframes pulse {
   from { transform: scale(1); }
-  to { transform: scale(1.08); }
+  to { transform: scale(1.05); }
 }
