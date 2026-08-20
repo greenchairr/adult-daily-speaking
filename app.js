@@ -17,18 +17,17 @@ function initApp() {
     unitNav.appendChild(btn);
   });
 
-  // Load the first unit by default
+  // Load first unit
   loadUnit(allUnits[0]);
 }
 
 function loadUnit(unitInfo) {
-  // Remove previously loaded unit script if it exists
   const oldScript = document.getElementById("dynamic-unit-script");
   if (oldScript) oldScript.remove();
 
   const script = document.createElement("script");
   script.id = "dynamic-unit-script";
-  script.src = unitInfo.path + "?v=" + Date.now(); // Prevent caching
+  script.src = unitInfo.path + "?v=" + Date.now();
   
   script.onload = () => {
     if (window.currentUnitData) {
@@ -59,35 +58,39 @@ function renderUnit(unit) {
     `;
 
     const playBtn = card.querySelector(".play-btn");
-    // Connects the play button directly to the AI text-to-speech engine
-    playBtn.onclick = () => speakSentence(item.en, playBtn);
+    playBtn.onclick = () => speakCloudTTS(item.en, playBtn);
 
     list.appendChild(card);
   });
 }
 
-// Generates natural AI voice directly from the text
-function speakSentence(text, buttonElement) {
-  if (responsiveVoice.isPlaying()) {
-    responsiveVoice.cancel();
+// Google Cloud TTS streamer (Free, Instant, No key required)
+function speakCloudTTS(text, buttonElement) {
+  if (currentAudio) {
+    currentAudio.pause();
+    currentAudio.currentTime = 0;
     if (currentActiveButton) {
       currentActiveButton.classList.remove("playing");
     }
   }
 
+  // Encodes sentence and streams clear US English cloud audio
+  const encodedText = encodeURIComponent(text);
+  const cloudUrl = `https://translate.google.com/translate_tts?ie=UTF-8&tl=en-US&client=tw-ob&q=${encodedText}`;
+
+  const audio = new Audio(cloudUrl);
+  currentAudio = audio;
   currentActiveButton = buttonElement;
   buttonElement.classList.add("playing");
 
-  // Uses high-quality Cloud US English Female/Male
-  responsiveVoice.speak(text, "US English Female", {
-    rate: 0.9,
-    onend: () => {
-      buttonElement.classList.remove("playing");
-    },
-    onerror: () => {
-      buttonElement.classList.remove("playing");
-    }
+  audio.play().catch(err => {
+    console.error("Cloud TTS playback error:", err);
+    buttonElement.classList.remove("playing");
   });
+
+  audio.onended = () => {
+    buttonElement.classList.remove("playing");
+  };
 }
 
 document.addEventListener("DOMContentLoaded", initApp);
