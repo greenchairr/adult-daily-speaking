@@ -4,7 +4,7 @@ let currentActiveButton = null;
 // Voice recording state
 let mediaRecorder = null;
 let audioChunks = [];
-let activeRecordingButton = null;
+let activeRecordingCard = null;
 
 function initApp() {
   const unitGrid = document.getElementById("unit-grid");
@@ -87,16 +87,17 @@ function renderUnitDetail(unit) {
         ${item.cue ? `<div class="card-cue">🚦 <strong>Ra hiệu:</strong> ${item.cue}</div>` : ""}
       </div>
       <div class="card-actions">
-        <button class="btn-action play-btn" title="Nghe mẫu">🔊</button>
-        <button class="btn-action record-btn" title="Ghi âm giọng của bạn">🎙️</button>
+        <button class="btn-action play-btn" title="Nghe mẫu">🔊 Mẫu</button>
+        <button class="btn-action record-btn" title="Ghi âm">🎙️ Ghi âm</button>
       </div>
     `;
 
     const playBtn = card.querySelector(".play-btn");
     const recordBtn = card.querySelector(".record-btn");
+    const actionsContainer = card.querySelector(".card-actions");
 
     playBtn.onclick = () => playAudio(item.audio, playBtn);
-    recordBtn.onclick = () => handleRecordToggle(recordBtn);
+    recordBtn.onclick = () => handleRecordToggle(recordBtn, actionsContainer);
 
     list.appendChild(card);
   });
@@ -133,28 +134,20 @@ function stopCurrentAudio() {
   }
 }
 
-// Student Recording & Playback
-async function handleRecordToggle(btn) {
-  // If button already has a saved recording, tapping it plays the recorded voice
-  if (btn.dataset.audioUrl && !btn.classList.contains("recording")) {
-    playAudio(btn.dataset.audioUrl, btn);
-    return;
-  }
-
-  // If currently recording on this button, stop recording
+// Student Recording & Re-recording Flow
+async function handleRecordToggle(btn, actionsContainer) {
+  // If currently recording, tap to finish
   if (mediaRecorder && mediaRecorder.state === "recording") {
     mediaRecorder.stop();
     return;
   }
 
-  // Stop other audio
   stopCurrentAudio();
 
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     audioChunks = [];
     mediaRecorder = new MediaRecorder(stream);
-    activeRecordingButton = btn;
 
     mediaRecorder.ondataavailable = (event) => {
       audioChunks.push(event.data);
@@ -164,25 +157,64 @@ async function handleRecordToggle(btn) {
       const audioBlob = new Blob(audioChunks, { type: "audio/mp4" });
       const audioUrl = URL.createObjectURL(audioBlob);
 
-      btn.dataset.audioUrl = audioUrl;
-      btn.classList.remove("recording");
-      btn.classList.add("has-recording");
-      btn.innerHTML = "▶️";
-      btn.title = "Nghe lại giọng của bạn";
+      // Replace with: [🔊 Mẫu] [▶️ Nghe lại] [🔄 Ghi lại]
+      actionsContainer.innerHTML = `
+        <button class="btn-action play-btn" title="Nghe mẫu">🔊 Mẫu</button>
+        <button class="btn-action user-play-btn" title="Nghe lại giọng bạn">▶️ Nghe lại</button>
+        <button class="btn-action re-record-btn" title="Ghi âm lại">🔄 Ghi lại</button>
+      `;
 
-      // Release microphone tracks
+      const playBtn = actionsContainer.querySelector(".play-btn");
+      const userPlayBtn = actionsContainer.querySelector(".user-play-btn");
+      const reRecordBtn = actionsContainer.querySelector(".re-record-btn");
+
+      // Find sentence audio path from parent card
+      const card = actionsContainer.closest(".card");
+      const unitData = window.currentUnitData || currentUnitData;
+      const sentenceText = card.querySelector(".card-en").innerText;
+      const sentenceObj = unitData.sentences.find(s => s.en === sentenceText);
+
+      if (sentenceObj) {
+        playBtn.onclick = () => playAudio(sentenceObj.audio, playBtn);
+      }
+
+      userPlayBtn.onclick = () => playAudio(audioUrl, userPlayBtn);
+      reRecordBtn.onclick = () => resetAndRecord(actionsContainer);
+
       stream.getTracks().forEach((track) => track.stop());
       mediaRecorder = null;
     };
 
     mediaRecorder.start();
     btn.classList.add("recording");
-    btn.innerHTML = "⏹️";
-    btn.title = "Dừng ghi âm";
+    btn.innerHTML = "⏹️ Dừng";
+    btn.title = "Bấm để dừng ghi âm";
   } catch (err) {
-    console.error("Microphone access denied:", err);
-    alert("Vui lòng cấp quyền truy cập Micro trên trình duyệt để ghi âm.");
+    console.error("Microphone access error:", err);
+    alert("Vui lòng cho phép quyền truy cập Micro trên trình duyệt để ghi âm.");
   }
+}
+
+function resetAndRecord(actionsContainer) {
+  actionsContainer.innerHTML = `
+    <button class="btn-action play-btn" title="Nghe mẫu">🔊 Mẫu</button>
+    <button class="btn-action record-btn" title="Ghi âm">🎙️ Ghi âm</button>
+  `;
+
+  const card = actionsContainer.closest(".card");
+  const unitData = window.currentUnitData || currentUnitData;
+  const sentenceText = card.querySelector(".card-en").innerText;
+  const sentenceObj = unitData.sentences.find(s => s.en === sentenceText);
+  const playBtn = actionsContainer.querySelector(".play-btn");
+  const recordBtn = actionsContainer.querySelector(".record-btn");
+
+  if (sentenceObj) {
+    playBtn.onclick = () => playAudio(sentenceObj.audio, playBtn);
+  }
+
+  recordBtn.onclick = () => handleRecordToggle(recordBtn, actionsContainer);
+  // Auto-start recording on click
+  recordBtn.click();
 }
 
 function stopRecording() {
