@@ -64,27 +64,44 @@ function renderUnit(unit) {
   });
 }
 
+// Single shared Audio instance for iOS Safari compatibility
+let sharedAudio = new Audio();
+let currentActiveButton = null;
+
 function playAudio(audioSrc, buttonElement) {
-  // Stop ongoing audio
-  if (currentAudio) {
-    currentAudio.pause();
-    currentAudio.currentTime = 0;
-    if (currentActiveButton) {
-      currentActiveButton.classList.remove("playing");
-    }
+  if (currentActiveButton) {
+    currentActiveButton.classList.remove("playing");
   }
 
-  const audio = new Audio(audioSrc);
-  currentAudio = audio;
   currentActiveButton = buttonElement;
   buttonElement.classList.add("playing");
 
-  audio.play().catch(err => {
-    console.error("Audio playback error:", err);
-    buttonElement.classList.remove("playing");
-  });
+  // Pause and reset previous source
+  sharedAudio.pause();
+  sharedAudio.currentTime = 0;
+  sharedAudio.src = audioSrc;
+  sharedAudio.load();
 
-  audio.onended = () => {
+  // Play immediately within the direct user touch event
+  const playPromise = sharedAudio.play();
+
+  if (playPromise !== undefined) {
+    playPromise
+      .then(() => {
+        // Audio started successfully
+      })
+      .catch(err => {
+        console.error("iOS Audio Playback Error:", err);
+        buttonElement.classList.remove("playing");
+      });
+  }
+
+  sharedAudio.onended = () => {
+    buttonElement.classList.remove("playing");
+  };
+
+  sharedAudio.onerror = () => {
+    console.error("File loading error for path:", audioSrc);
     buttonElement.classList.remove("playing");
   };
 }
