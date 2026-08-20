@@ -2,7 +2,6 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8" />
-  <!-- Keeps the layout locked at 100% scale without zooming issues -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Luyện Tiếng Anh</title>
   <link rel="stylesheet" href="style.css" />
@@ -16,6 +15,11 @@
         <p>Chọn bài học để bắt đầu luyện nghe và phát âm.</p>
       </header>
       <div id="unit-grid" class="unit-grid"></div>
+
+      <!-- Nút mở thông tin trung tâm -->
+      <footer class="app-footer">
+        <button id="btn-info" class="btn-info">ℹ️ Thông tin trung tâm</button>
+      </footer>
     </section>
 
     <!-- View 2: Màn hình chi tiết bài học -->
@@ -31,6 +35,18 @@
 
       <div id="sentence-list" class="sentence-list"></div>
     </section>
+  </div>
+
+  <!-- Modal Credits / Thông Tin Liên Hệ -->
+  <div id="info-modal" class="modal-overlay">
+    <div class="modal-card">
+      <h3>🏛️ Trung Tâm Ngoại Ngữ Anh Việt</h3>
+      <div class="info-content">
+        <p>📞 <strong>Hotline:</strong> <a href="tel:0396721223">0396.721.223</a></p>
+        <p>📍 <strong>Địa chỉ:</strong> Ấp 1, Cái Đôi Vàm, Phú Tân, Cà Mau</p>
+      </div>
+      <button id="btn-close-modal" class="btn-close">Đóng</button>
+    </div>
   </div>
 
   <script src="units.js"></script>
