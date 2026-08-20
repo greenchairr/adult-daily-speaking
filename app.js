@@ -4,8 +4,51 @@ let currentActiveButton = null;
 // Voice recording state
 let mediaRecorder = null;
 let audioChunks = [];
-let activeRecordingCard = null;
 
+// --- IndexedDB Local Storage Manager ---
+const DB_NAME = "EnglishPracticeAudioDB";
+const STORE_NAME = "recordings";
+
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(DB_NAME, 1);
+    request.onupgradeneeded = (e) => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains(STORE_NAME)) {
+        db.createObjectStore(STORE_NAME);
+      }
+    };
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+async function saveRecordingLocally(key, blob) {
+  try {
+    const db = await openDB();
+    const tx = db.transaction(STORE_NAME, "readwrite");
+    tx.objectStore(STORE_NAME).put(blob, key);
+  } catch (err) {
+    console.error("Error saving audio to IndexedDB:", err);
+  }
+}
+
+async function getRecordingLocally(key) {
+  try {
+    const db = await openDB();
+    return new Promise((resolve) => {
+      const tx = db.transaction(STORE_NAME, "readonly");
+      const req = tx.objectStore(STORE_NAME).get(key);
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => resolve(null);
+    });
+  } catch (err) {
+    console.error("Error reading audio from IndexedDB:", err);
+    return null;
+  }
+}
+
+// --- App Initialization & Navigation ---
 function initApp() {
   const unitGrid = document.getElementById("unit-grid");
   const btnBack = document.getElementById("btn-back");
@@ -70,12 +113,13 @@ function openUnit(unitInfo) {
   document.body.appendChild(script);
 }
 
-function renderUnitDetail(unit) {
+async function renderUnitDetail(unit) {
   document.getElementById("detail-unit-title").innerText = unit.unitTitle;
   const list = document.getElementById("sentence-list");
   list.innerHTML = "";
 
-  unit.sentences.forEach((item) => {
+  for (const item of unit.sentences) {
+    const storageKey = `u${unit.unitId}_s${item.id}`;
     const card = document.createElement("div");
     card.className = "card";
 
@@ -86,21 +130,50 @@ function renderUnitDetail(unit) {
         ${item.chunk ? `<div class="card-chunk">🧩 <strong>Cụm:</strong> ${item.chunk}</div>` : ""}
         ${item.cue ? `<div class="card-cue">🚦 <strong>Ra hiệu:</strong> ${item.cue}</div>` : ""}
       </div>
-      <div class="card-actions">
-        <button class="btn-action play-btn" title="Nghe mẫu">🔊 Mẫu</button>
-        <button class="btn-action record-btn" title="Ghi âm">🎙️ Ghi âm</button>
-      </div>
+      <div class="card-actions" id="actions-${storageKey}"></div>
     `;
 
-    const playBtn = card.querySelector(".play-btn");
-    const recordBtn = card.querySelector(".record-btn");
     const actionsContainer = card.querySelector(".card-actions");
+    const savedBlob = await getRecordingLocally(storageKey);
 
-    playBtn.onclick = () => playAudio(item.audio, playBtn);
-    recordBtn.onclick = () => handleRecordToggle(recordBtn, actionsContainer);
+    if (savedBlob) {
+      const audioUrl = URL.createObjectURL(savedBlob);
+      renderActionButtons(actionsContainer, item, audioUrl, storageKey);
+    } else {
+      renderDefaultButtons(actionsContainer, item, storageKey);
+    }
 
     list.appendChild(card);
-  });
+  }
+}
+
+function renderDefaultButtons(container, item, storageKey) {
+  container.innerHTML = `
+    <button class="btn-action play-btn" title="Nghe mẫu">🔊 Mẫu</button>
+    <button class="btn-action record-btn" title="Ghi âm">🎙️ Ghi âm</button>
+  `;
+
+  const playBtn = container.querySelector(".play-btn");
+  const recordBtn = container.querySelector(".record-btn");
+
+  playBtn.onclick = () => playAudio(item.audio, playBtn);
+  recordBtn.onclick = () => handleRecordToggle(recordBtn, container, item, storageKey);
+}
+
+function renderActionButtons(container, item, audioUrl, storageKey) {
+  container.innerHTML = `
+    <button class="btn-action play-btn" title="Nghe mẫu">🔊 Mẫu</button>
+    <button class="btn-action user-play-btn" title="Nghe lại giọng bạn">▶️ Nghe lại</button>
+    <button class="btn-action re-record-btn" title="Ghi âm lại">🔄 Ghi lại</button>
+  `;
+
+  const playBtn = container.querySelector(".play-btn");
+  const userPlayBtn = container.querySelector(".user-play-btn");
+  const reRecordBtn = container.querySelector(".re-record-btn");
+
+  playBtn.onclick = () => playAudio(item.audio, playBtn);
+  userPlayBtn.onclick = () => playAudio(audioUrl, userPlayBtn);
+  reRecordBtn.onclick = () => resetAndRecord(container, item, storageKey);
 }
 
 function playAudio(audioSrc, buttonElement) {
@@ -134,9 +207,8 @@ function stopCurrentAudio() {
   }
 }
 
-// Student Recording & Re-recording Flow
-async function handleRecordToggle(btn, actionsContainer) {
-  // If currently recording, tap to finish
+// Student Recording with IndexedDB Persistence
+async function handleRecordToggle(btn, container, item, storageKey) {
   if (mediaRecorder && mediaRecorder.state === "recording") {
     mediaRecorder.stop();
     return;
@@ -153,33 +225,12 @@ async function handleRecordToggle(btn, actionsContainer) {
       audioChunks.push(event.data);
     };
 
-    mediaRecorder.onstop = () => {
+    mediaRecorder.onstop = async () => {
       const audioBlob = new Blob(audioChunks, { type: "audio/mp4" });
+      await saveRecordingLocally(storageKey, audioBlob);
       const audioUrl = URL.createObjectURL(audioBlob);
 
-      // Replace with: [🔊 Mẫu] [▶️ Nghe lại] [🔄 Ghi lại]
-      actionsContainer.innerHTML = `
-        <button class="btn-action play-btn" title="Nghe mẫu">🔊 Mẫu</button>
-        <button class="btn-action user-play-btn" title="Nghe lại giọng bạn">▶️ Nghe lại</button>
-        <button class="btn-action re-record-btn" title="Ghi âm lại">🔄 Ghi lại</button>
-      `;
-
-      const playBtn = actionsContainer.querySelector(".play-btn");
-      const userPlayBtn = actionsContainer.querySelector(".user-play-btn");
-      const reRecordBtn = actionsContainer.querySelector(".re-record-btn");
-
-      // Find sentence audio path from parent card
-      const card = actionsContainer.closest(".card");
-      const unitData = window.currentUnitData || currentUnitData;
-      const sentenceText = card.querySelector(".card-en").innerText;
-      const sentenceObj = unitData.sentences.find(s => s.en === sentenceText);
-
-      if (sentenceObj) {
-        playBtn.onclick = () => playAudio(sentenceObj.audio, playBtn);
-      }
-
-      userPlayBtn.onclick = () => playAudio(audioUrl, userPlayBtn);
-      reRecordBtn.onclick = () => resetAndRecord(actionsContainer);
+      renderActionButtons(container, item, audioUrl, storageKey);
 
       stream.getTracks().forEach((track) => track.stop());
       mediaRecorder = null;
@@ -195,25 +246,9 @@ async function handleRecordToggle(btn, actionsContainer) {
   }
 }
 
-function resetAndRecord(actionsContainer) {
-  actionsContainer.innerHTML = `
-    <button class="btn-action play-btn" title="Nghe mẫu">🔊 Mẫu</button>
-    <button class="btn-action record-btn" title="Ghi âm">🎙️ Ghi âm</button>
-  `;
-
-  const card = actionsContainer.closest(".card");
-  const unitData = window.currentUnitData || currentUnitData;
-  const sentenceText = card.querySelector(".card-en").innerText;
-  const sentenceObj = unitData.sentences.find(s => s.en === sentenceText);
-  const playBtn = actionsContainer.querySelector(".play-btn");
-  const recordBtn = actionsContainer.querySelector(".record-btn");
-
-  if (sentenceObj) {
-    playBtn.onclick = () => playAudio(sentenceObj.audio, playBtn);
-  }
-
-  recordBtn.onclick = () => handleRecordToggle(recordBtn, actionsContainer);
-  // Auto-start recording on click
+function resetAndRecord(container, item, storageKey) {
+  renderDefaultButtons(container, item, storageKey);
+  const recordBtn = container.querySelector(".record-btn");
   recordBtn.click();
 }
 
@@ -233,7 +268,7 @@ document.addEventListener("touchend", function (event) {
   lastTouchEnd = now;
 }, false);
 
-// Block pinch-to-zoom
+// Block pinch gestures
 document.addEventListener("gesturestart", (e) => e.preventDefault());
 document.addEventListener("gesturechange", (e) => e.preventDefault());
 document.addEventListener("gestureend", (e) => e.preventDefault());
