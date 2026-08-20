@@ -6,7 +6,7 @@ window.allUnits = [
   },
   { 
     id: 2, 
-    title: "🌙 Chủ đề 2: Buổi tối và chông", 
+    title: "🌙 Chủ đề 2: Buổi tối và chồng", 
     path: "units/unit2/data.js" 
   }
 ];
