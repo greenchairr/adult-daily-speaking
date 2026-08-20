@@ -48,7 +48,7 @@ window.currentUnitData = {
       vi: "Nhắc con mang dép trước khi ra ngoài.",
       chunk: "slides ➔ your slides ➔ Put on your slides.",
       cue: "Chỉ vào dép / 'Bảo con mang dép vào.'",
-      audio: "units/unit1/audio/put_on_slides.mp3"
+      audio: "units/unit1/audio/put_on_shoes.mp3"
     },
     {
       id: 7,
