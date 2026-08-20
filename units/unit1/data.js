@@ -46,7 +46,7 @@ window.currentUnitData = {
       id: 6,
       en: "Put on your shoes.",
       vi: "Nhắc con mang giày trước khi ra ngoài.",
-      chunk: "shoes ➔ your shoes ➔ Put on your shoes.",
+      chunk: "shoes ➔ your shoes ➔ Put on your slides.",
       cue: "Chỉ vào giày / 'Bảo con mang giày vào.'",
       audio: "units/unit1/audio/put_on_shoes.mp3"
     },
