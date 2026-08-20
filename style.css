@@ -268,3 +268,98 @@ button, .unit-card-btn, .card, .btn-action {
   from { transform: scale(1); }
   to { transform: scale(1.05); }
 }
+
+/* Footer & Credits Link */
+.app-footer {
+  margin-top: 36px;
+  text-align: center;
+}
+
+.btn-info {
+  background: transparent;
+  border: none;
+  color: var(--text-sub);
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 8px 14px;
+  border-radius: 8px;
+  text-decoration: underline;
+}
+
+.btn-info:active {
+  color: var(--primary);
+}
+
+/* Modal Overlay */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(15, 23, 42, 0.5);
+  backdrop-filter: blur(3px);
+  z-index: 100;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.modal-overlay.active {
+  display: flex;
+  animation: fadeIn 0.15s ease-out;
+}
+
+/* Modal Box */
+.modal-card {
+  background: var(--card-bg);
+  width: 100%;
+  max-width: 380px;
+  border-radius: 18px;
+  padding: 24px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  text-align: center;
+}
+
+.modal-card h3 {
+  font-size: 1.15rem;
+  color: var(--primary);
+  margin-bottom: 16px;
+}
+
+.info-content {
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 0.95rem;
+  color: var(--text-main);
+  background: #f8fafc;
+  padding: 14px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+}
+
+.info-content a {
+  color: var(--primary);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.btn-close {
+  width: 100%;
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  padding: 12px;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-close:active {
+  transform: scale(0.98);
+}
