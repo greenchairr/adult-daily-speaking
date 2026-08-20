@@ -2,48 +2,69 @@ let currentAudio = null;
 let currentActiveButton = null;
 
 function initApp() {
-  const unitNav = document.getElementById("unit-nav");
-  if (!allUnits || allUnits.length === 0) return;
+  const unitGrid = document.getElementById("unit-grid");
+  const btnBack = document.getElementById("btn-back");
 
-  allUnits.forEach((unit, index) => {
+  if (!window.allUnits || window.allUnits.length === 0) return;
+
+  // Render main screen unit buttons
+  unitGrid.innerHTML = "";
+  window.allUnits.forEach((unit) => {
     const btn = document.createElement("button");
-    btn.className = `unit-btn ${index === 0 ? "active" : ""}`;
-    btn.innerText = `Unit ${unit.id}`;
-    btn.onclick = () => {
-      document.querySelectorAll(".unit-btn").forEach(b => b.classList.remove("active"));
-      btn.classList.add("active");
-      loadUnit(unit);
-    };
-    unitNav.appendChild(btn);
+    btn.className = "unit-card-btn";
+    btn.innerHTML = `
+      <span class="unit-title-text">${unit.title}</span>
+      <span class="arrow-icon">➔</span>
+    `;
+    btn.onclick = () => openUnit(unit);
+    unitGrid.appendChild(btn);
   });
 
-  // Load first unit by default
-  loadUnit(allUnits[0]);
+  // Back button functionality
+  btnBack.onclick = () => {
+    stopCurrentAudio();
+    showView("view-home");
+  };
 }
 
-function loadUnit(unitInfo) {
+function showView(viewId) {
+  document.querySelectorAll(".view").forEach((view) => {
+    view.classList.remove("active");
+  });
+  document.getElementById(viewId).classList.add("active");
+  window.scrollTo(0, 0);
+}
+
+function openUnit(unitInfo) {
+  // Clean up any previously injected script
   const oldScript = document.getElementById("dynamic-unit-script");
   if (oldScript) oldScript.remove();
 
+  // Dynamically load the unit's data.js
   const script = document.createElement("script");
   script.id = "dynamic-unit-script";
   script.src = unitInfo.path + "?v=" + Date.now();
-  
+
   script.onload = () => {
     if (window.currentUnitData) {
-      renderUnit(window.currentUnitData);
+      renderUnitDetail(window.currentUnitData);
+      showView("view-unit");
     }
+  };
+
+  script.onerror = () => {
+    alert("Could not load unit data. Please check the file path: " + unitInfo.path);
   };
 
   document.body.appendChild(script);
 }
 
-function renderUnit(unit) {
-  document.getElementById("current-unit-title").innerText = unit.unitTitle;
+function renderUnitDetail(unit) {
+  document.getElementById("detail-unit-title").innerText = unit.unitTitle;
   const list = document.getElementById("sentence-list");
   list.innerHTML = "";
 
-  unit.sentences.forEach(item => {
+  unit.sentences.forEach((item) => {
     const card = document.createElement("div");
     card.className = "card";
 
@@ -64,46 +85,35 @@ function renderUnit(unit) {
   });
 }
 
-// Single shared Audio instance for iOS Safari compatibility
-let sharedAudio = new Audio();
-let currentActiveButton = null;
-
 function playAudio(audioSrc, buttonElement) {
-  if (currentActiveButton) {
-    currentActiveButton.classList.remove("playing");
-  }
+  stopCurrentAudio();
 
   currentActiveButton = buttonElement;
   buttonElement.classList.add("playing");
 
-  // Pause and reset previous source
-  sharedAudio.pause();
-  sharedAudio.currentTime = 0;
-  sharedAudio.src = audioSrc;
-  sharedAudio.load();
+  const audio = new Audio(audioSrc);
+  currentAudio = audio;
 
-  // Play immediately within the direct user touch event
-  const playPromise = sharedAudio.play();
+  audio.play().catch((err) => {
+    console.error("Audio playback error:", err);
+    stopCurrentAudio();
+  });
 
-  if (playPromise !== undefined) {
-    playPromise
-      .then(() => {
-        // Audio started successfully
-      })
-      .catch(err => {
-        console.error("iOS Audio Playback Error:", err);
-        buttonElement.classList.remove("playing");
-      });
+  audio.onended = () => {
+    stopCurrentAudio();
+  };
+}
+
+function stopCurrentAudio() {
+  if (currentAudio) {
+    currentAudio.pause();
+    currentAudio.currentTime = 0;
+    currentAudio = null;
   }
-
-  sharedAudio.onended = () => {
-    buttonElement.classList.remove("playing");
-  };
-
-  sharedAudio.onerror = () => {
-    console.error("File loading error for path:", audioSrc);
-    buttonElement.classList.remove("playing");
-  };
+  if (currentActiveButton) {
+    currentActiveButton.classList.remove("playing");
+    currentActiveButton = null;
+  }
 }
 
 document.addEventListener("DOMContentLoaded", initApp);
