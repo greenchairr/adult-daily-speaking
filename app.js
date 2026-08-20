@@ -50,6 +50,19 @@ async function getRecordingLocally(key) {
 
 // --- App Initialization & Navigation ---
 function initApp() {
+  // Add inside initApp():
+const btnInfo = document.getElementById("btn-info");
+const btnCloseModal = document.getElementById("btn-close-modal");
+const infoModal = document.getElementById("info-modal");
+
+if (btnInfo && infoModal) {
+  btnInfo.onclick = () => infoModal.classList.add("active");
+  btnCloseModal.onclick = () => infoModal.classList.remove("active");
+  infoModal.onclick = (e) => {
+    if (e.target === infoModal) infoModal.classList.remove("active");
+  };
+}
+  
   const unitGrid = document.getElementById("unit-grid");
   const btnBack = document.getElementById("btn-back");
 
