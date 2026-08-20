@@ -3,23 +3,40 @@ let currentActiveButton = null;
 
 function initApp() {
   const unitNav = document.getElementById("unit-nav");
-  if (!lessonsData || lessonsData.length === 0) return;
+  if (!allUnits || allUnits.length === 0) return;
 
-  // Generate Unit Buttons
-  lessonsData.forEach((unit, index) => {
+  allUnits.forEach((unit, index) => {
     const btn = document.createElement("button");
     btn.className = `unit-btn ${index === 0 ? "active" : ""}`;
-    btn.innerText = `Unit ${unit.unitId}`;
+    btn.innerText = `Unit ${unit.id}`;
     btn.onclick = () => {
       document.querySelectorAll(".unit-btn").forEach(b => b.classList.remove("active"));
       btn.classList.add("active");
-      renderUnit(unit);
+      loadUnit(unit);
     };
     unitNav.appendChild(btn);
   });
 
-  // Render first unit by default
-  renderUnit(lessonsData[0]);
+  // Load the first unit by default
+  loadUnit(allUnits[0]);
+}
+
+function loadUnit(unitInfo) {
+  // Remove previously injected unit script if it exists
+  const oldScript = document.getElementById("dynamic-unit-script");
+  if (oldScript) oldScript.remove();
+
+  const script = document.createElement("script");
+  script.id = "dynamic-unit-script";
+  script.src = unitInfo.path + "?v=" + Date.now(); // Prevents browser cache issues
+  
+  script.onload = () => {
+    if (window.currentUnitData) {
+      renderUnit(window.currentUnitData);
+    }
+  };
+
+  document.body.appendChild(script);
 }
 
 function renderUnit(unit) {
@@ -48,9 +65,7 @@ function renderUnit(unit) {
   });
 }
 
-
 function playAudio(audioSrc, buttonElement) {
-  // Stop existing audio if playing
   if (currentAudio) {
     currentAudio.pause();
     currentAudio.currentTime = 0;
