@@ -17,7 +17,7 @@ function initApp() {
     unitNav.appendChild(btn);
   });
 
-  // Load first unit
+  // Load first unit by default
   loadUnit(allUnits[0]);
 }
 
@@ -58,18 +58,14 @@ function renderUnit(unit) {
     `;
 
     const playBtn = card.querySelector(".play-btn");
-    // Passes the entire item to read the chunk pattern
     playBtn.onclick = () => speakChunk(item, playBtn);
 
     list.appendChild(card);
   });
 }
 
-// Google Cloud TTS streamer (Free, Instant, No key required)
-// Reliable Audio Player (Cloud Stream with Instant Fail-safe)
-// Speaks the chunk buildup, followed by 3 repetitions of the full sentence
 function speakChunk(item, buttonElement) {
-  // Reset previous audio
+  // Stop ongoing playback
   if (currentAudio) {
     currentAudio.pause();
     currentAudio.currentTime = 0;
@@ -87,19 +83,19 @@ function speakChunk(item, buttonElement) {
   let speechScript = "";
 
   if (item.chunk) {
-    // Splits "teeth ➔ your teeth ➔ Brush your teeth." into speech steps
-    const chunks = item.chunk.split("➔").map(s => s.trim().replace(/\.$/, ""));
-    const fullSentence = item.en.replace(/[.!?]/g, "").trim();
+    // Clean trailing dots from chunks
+    const chunks = item.chunk.split("➔").map(s => s.trim().replace(/[.!?]+$/, ""));
+    const fullSentence = item.en.trim().replace(/[.!?]+$/, "");
 
-    // Step 1: Speak each chunk buildup with commas for natural pauses
-    const buildup = chunks.join("... ");
+    // Extract prefixes before full sentence (e.g. ["teeth", "your teeth"])
+    const prefixChunks = chunks.slice(0, -1);
+    const buildup = prefixChunks.length > 0 ? prefixChunks.join(", ") + ", " : "";
 
-    // Step 2: Repeat full sentence 3 times
-    const repetitions = `${fullSentence}... ${fullSentence}... ${fullSentence}.`;
-
-    speechScript = `${buildup}... ${repetitions}`;
+    // Repeat full sentence 3 times with clear pause intervals
+    speechScript = `${buildup}${fullSentence}. ${fullSentence}. ${fullSentence}.`;
   } else {
-    speechScript = `${item.en}... ${item.en}... ${item.en}`;
+    const cleanSentence = item.en.trim().replace(/[.!?]+$/, "");
+    speechScript = `${cleanSentence}. ${cleanSentence}. ${cleanSentence}.`;
   }
 
   executeAudioPlay(speechScript, buttonElement);
@@ -119,7 +115,7 @@ function executeAudioPlay(speechText, buttonElement) {
       };
     })
     .catch(() => {
-      // Fallback to high-quality device voice if cloud stream fails
+      // Automatic fallback to high-quality device engine
       playHDSpeech(speechText, buttonElement);
     });
 }
