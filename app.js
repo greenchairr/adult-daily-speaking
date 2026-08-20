@@ -58,7 +58,8 @@ function renderUnit(unit) {
     `;
 
     const playBtn = card.querySelector(".play-btn");
-    playBtn.onclick = () => speakCloudTTS(item.en, playBtn);
+    // Passes the entire item to read the chunk pattern
+    playBtn.onclick = () => speakChunk(item, playBtn);
 
     list.appendChild(card);
   });
