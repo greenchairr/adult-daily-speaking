@@ -44,11 +44,11 @@ window.currentUnitData = {
     },
     {
       id: 6,
-      en: "Put on your shoes.",
-      vi: "Nhắc con mang giày trước khi ra ngoài.",
+      en: "Put on your slides.",
+      vi: "Nhắc con mang dép trước khi ra ngoài.",
       chunk: "slides ➔ your slides ➔ Put on your slides.",
       cue: "Chỉ vào dép / 'Bảo con mang dép vào.'",
-      audio: "units/unit1/audio/put_on_shoes.mp3"
+      audio: "units/unit1/audio/put_on_slides.mp3"
     },
     {
       id: 7,
