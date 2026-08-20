@@ -1,6 +1,6 @@
 window.currentUnitData = {
   unitId: 1,
-  unitTitle: "🌅 Block 1: Kids Routines",
+  unitTitle: "🌅 Chủ đề 1: Trò chuyện với con",
   sentences: [
     {
       id: 1,
@@ -46,8 +46,8 @@ window.currentUnitData = {
       id: 6,
       en: "Put on your shoes.",
       vi: "Nhắc con mang giày trước khi ra ngoài.",
-      chunk: "shoes ➔ your shoes ➔ Put on your slides.",
-      cue: "Chỉ vào giày / 'Bảo con mang giày vào.'",
+      chunk: "slides ➔ your slides ➔ Put on your slides.",
+      cue: "Chỉ vào dép / 'Bảo con mang dép vào.'",
       audio: "units/unit1/audio/put_on_shoes.mp3"
     },
     {
