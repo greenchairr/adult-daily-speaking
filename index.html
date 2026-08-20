@@ -1,32 +1,31 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
   <meta charset="UTF-8" />
-  <!-- Prevents accidental zooming on mobile devices -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>English Practice Hub</title>
+  <title>Luyện Nói & Nghe Tiếng Anh</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div class="container">
-    <!-- View 1: Main Menu / Unit Grid -->
+    <!-- View 1: Màn hình chọn bài học -->
     <section id="view-home" class="view active">
       <header class="home-header">
-        <h1>🎧 English Practice</h1>
-        <p>Select a unit to start practicing your speaking and listening.</p>
+        <h1>🎧 Luyện Tiếng Anh</h1>
+        <p>Chọn bài học để bắt đầu luyện nghe và phát âm.</p>
       </header>
       <div id="unit-grid" class="unit-grid"></div>
     </section>
 
-    <!-- View 2: Unit Detail Screen -->
+    <!-- View 2: Màn hình chi tiết bài học -->
     <section id="view-unit" class="view">
       <header class="detail-header">
-        <button id="btn-back" class="btn-back" aria-label="Back to Units">
+        <button id="btn-back" class="btn-back" aria-label="Quay lại">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="15 18 9 12 15 6"></polyline>
           </svg>
         </button>
-        <h2 id="detail-unit-title">Unit Details</h2>
+        <h2 id="detail-unit-title">Chi Tiết Bài Học</h2>
       </header>
 
       <div id="sentence-list" class="sentence-list"></div>
