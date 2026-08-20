@@ -1,12 +1,12 @@
 window.allUnits = [
   { 
     id: 1, 
-    title: "🌅 Block 1: Kids Routines", 
+    title: "🌅 Chủ đề 1: Nói chuyện với con", 
     path: "units/unit1/data.js" 
   },
   { 
     id: 2, 
-    title: "🌙 Block 2: Evening & Husband Routines", 
+    title: "🌙 Chủ đề 2: Buổi tối và chông", 
     path: "units/unit2/data.js" 
   }
 ];
