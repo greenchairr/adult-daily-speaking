@@ -65,32 +65,76 @@ function renderUnit(unit) {
 }
 
 // Google Cloud TTS streamer (Free, Instant, No key required)
+// Reliable Audio Player (Cloud Stream with Instant Fail-safe)
 function speakCloudTTS(text, buttonElement) {
+  // Stop current audio if playing
   if (currentAudio) {
     currentAudio.pause();
     currentAudio.currentTime = 0;
-    if (currentActiveButton) {
-      currentActiveButton.classList.remove("playing");
-    }
+  }
+  if (window.speechSynthesis && window.speechSynthesis.speaking) {
+    window.speechSynthesis.cancel();
+  }
+  if (currentActiveButton) {
+    currentActiveButton.classList.remove("playing");
   }
 
-  // Encodes sentence and streams clear US English cloud audio
-  const encodedText = encodeURIComponent(text);
-  const cloudUrl = `https://translate.google.com/translate_tts?ie=UTF-8&tl=en-US&client=tw-ob&q=${encodedText}`;
-
-  const audio = new Audio(cloudUrl);
-  currentAudio = audio;
   currentActiveButton = buttonElement;
   buttonElement.classList.add("playing");
 
-  audio.play().catch(err => {
-    console.error("Cloud TTS playback error:", err);
-    buttonElement.classList.remove("playing");
-  });
+  const cleanText = text.trim();
+  const encodedText = encodeURIComponent(cleanText);
 
-  audio.onended = () => {
+  // Free Cloud TTS stream endpoint (CORS-friendly)
+  const cloudUrl = `https://api.voicerss.org/?key=e413697e556441b4b08709ecbbdeca15&hl=en-us&v=Mary&r=0&src=${encodedText}`;
+
+  const audio = new Audio(cloudUrl);
+  currentAudio = audio;
+
+  audio.play()
+    .then(() => {
+      audio.onended = () => {
+        buttonElement.classList.remove("playing");
+      };
+    })
+    .catch((err) => {
+      console.warn("Cloud stream blocked, switching to HD speech engine:", err);
+      playHDSpeech(cleanText, buttonElement);
+    });
+}
+
+function playHDSpeech(text, buttonElement) {
+  if (!('speechSynthesis' in window)) {
+    buttonElement.classList.remove("playing");
+    alert("Audio playback not supported on this browser.");
+    return;
+  }
+
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = "en-US";
+  utterance.rate = 0.88;
+
+  const voices = window.speechSynthesis.getVoices();
+  const naturalVoice = voices.find(v => 
+    v.lang.startsWith("en") && (
+      v.name.includes("Natural") || 
+      v.name.includes("Google") || 
+      v.name.includes("Siri") || 
+      v.name.includes("Samantha")
+    )
+  ) || voices.find(v => v.lang.startsWith("en"));
+
+  if (naturalVoice) utterance.voice = naturalVoice;
+
+  utterance.onend = () => {
     buttonElement.classList.remove("playing");
   };
+
+  utterance.onerror = () => {
+    buttonElement.classList.remove("playing");
+  };
+
+  window.speechSynthesis.speak(utterance);
 }
 
 document.addEventListener("DOMContentLoaded", initApp);
