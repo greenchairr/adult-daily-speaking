@@ -66,8 +66,9 @@ function renderUnit(unit) {
 
 // Google Cloud TTS streamer (Free, Instant, No key required)
 // Reliable Audio Player (Cloud Stream with Instant Fail-safe)
-function speakCloudTTS(text, buttonElement) {
-  // Stop current audio if playing
+// Speaks the chunk buildup, followed by 3 repetitions of the full sentence
+function speakChunk(item, buttonElement) {
+  // Reset previous audio
   if (currentAudio) {
     currentAudio.pause();
     currentAudio.currentTime = 0;
@@ -82,11 +83,30 @@ function speakCloudTTS(text, buttonElement) {
   currentActiveButton = buttonElement;
   buttonElement.classList.add("playing");
 
-  const cleanText = text.trim();
-  const encodedText = encodeURIComponent(cleanText);
+  let speechScript = "";
 
-  // Free Cloud TTS stream endpoint (CORS-friendly)
-  const cloudUrl = `https://api.voicerss.org/?key=e413697e556441b4b08709ecbbdeca15&hl=en-us&v=Mary&r=0&src=${encodedText}`;
+  if (item.chunk) {
+    // Splits "teeth ➔ your teeth ➔ Brush your teeth." into speech steps
+    const chunks = item.chunk.split("➔").map(s => s.trim().replace(/\.$/, ""));
+    const fullSentence = item.en.replace(/[.!?]/g, "").trim();
+
+    // Step 1: Speak each chunk buildup with commas for natural pauses
+    const buildup = chunks.join("... ");
+
+    // Step 2: Repeat full sentence 3 times
+    const repetitions = `${fullSentence}... ${fullSentence}... ${fullSentence}.`;
+
+    speechScript = `${buildup}... ${repetitions}`;
+  } else {
+    speechScript = `${item.en}... ${item.en}... ${item.en}`;
+  }
+
+  executeAudioPlay(speechScript, buttonElement);
+}
+
+function executeAudioPlay(speechText, buttonElement) {
+  const encodedText = encodeURIComponent(speechText);
+  const cloudUrl = `https://api.voicerss.org/?key=e413697e556441b4b08709ecbbdeca15&hl=en-us&v=Mary&r=-1&src=${encodedText}`;
 
   const audio = new Audio(cloudUrl);
   currentAudio = audio;
@@ -97,22 +117,21 @@ function speakCloudTTS(text, buttonElement) {
         buttonElement.classList.remove("playing");
       };
     })
-    .catch((err) => {
-      console.warn("Cloud stream blocked, switching to HD speech engine:", err);
-      playHDSpeech(cleanText, buttonElement);
+    .catch(() => {
+      // Fallback to high-quality device voice if cloud stream fails
+      playHDSpeech(speechText, buttonElement);
     });
 }
 
 function playHDSpeech(text, buttonElement) {
   if (!('speechSynthesis' in window)) {
     buttonElement.classList.remove("playing");
-    alert("Audio playback not supported on this browser.");
     return;
   }
 
   const utterance = new SpeechSynthesisUtterance(text);
   utterance.lang = "en-US";
-  utterance.rate = 0.88;
+  utterance.rate = 0.85;
 
   const voices = window.speechSynthesis.getVoices();
   const naturalVoice = voices.find(v => 
@@ -126,13 +145,8 @@ function playHDSpeech(text, buttonElement) {
 
   if (naturalVoice) utterance.voice = naturalVoice;
 
-  utterance.onend = () => {
-    buttonElement.classList.remove("playing");
-  };
-
-  utterance.onerror = () => {
-    buttonElement.classList.remove("playing");
-  };
+  utterance.onend = () => buttonElement.classList.remove("playing");
+  utterance.onerror = () => buttonElement.classList.remove("playing");
 
   window.speechSynthesis.speak(utterance);
 }
