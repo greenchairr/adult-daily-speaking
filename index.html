@@ -2,25 +2,35 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- Prevents accidental zooming on mobile devices -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>English Practice Hub</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div class="container">
-    <header>
-      <h1>🎧 English Practice</h1>
-      <p>Select a unit, listen to the native pronunciation, and practice speaking.</p>
-    </header>
+    <!-- View 1: Main Menu / Unit Grid -->
+    <section id="view-home" class="view active">
+      <header class="home-header">
+        <h1>🎧 English Practice</h1>
+        <p>Select a unit to start practicing your speaking and listening.</p>
+      </header>
+      <div id="unit-grid" class="unit-grid"></div>
+    </section>
 
-    <!-- Unit Selection Buttons -->
-    <nav id="unit-nav" class="unit-nav"></nav>
+    <!-- View 2: Unit Detail Screen -->
+    <section id="view-unit" class="view">
+      <header class="detail-header">
+        <button id="btn-back" class="btn-back" aria-label="Back to Units">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
+        </button>
+        <h2 id="detail-unit-title">Unit Details</h2>
+      </header>
 
-    <!-- Current Unit Header & Sentences -->
-    <main>
-      <h2 id="current-unit-title"></h2>
       <div id="sentence-list" class="sentence-list"></div>
-    </main>
+    </section>
   </div>
 
   <script src="units.js"></script>
