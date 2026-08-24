@@ -28,20 +28,23 @@ html, body {
   user-select: none;
   overflow-x: hidden;
   background-color: var(--bg);
+  min-height: 100%;
   color: var(--text-main);
 }
 
 body {
-  /* Keep your background color */
   background-color: var(--bg);
   color: var(--text-main);
-  
-  /* Add safe area insets for notch and home bar */
-  padding-top: calc(16px + env(safe-area-inset-top));
-  padding-bottom: calc(16px + env(safe-area-inset-bottom));
-  padding-left: calc(16px + env(safe-area-inset-left));
-  padding-right: calc(16px + env(safe-area-inset-right));
-  
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
+  box-sizing: border-box;
+
+  /* Push content down only as much as the notch/status bar requires */
+  padding-top: max(16px, env(safe-area-inset-top));
+  padding-bottom: max(16px, env(safe-area-inset-bottom));
+  padding-left: max(16px, env(safe-area-inset-left));
+  padding-right: max(16px, env(safe-area-inset-right));
+
   display: flex;
   justify-content: center;
 }
