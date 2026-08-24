@@ -32,7 +32,16 @@ html, body {
 }
 
 body {
-  padding: 16px;
+  /* Keep your background color */
+  background-color: var(--bg);
+  color: var(--text-main);
+  
+  /* Add safe area insets for notch and home bar */
+  padding-top: calc(16px + env(safe-area-inset-top));
+  padding-bottom: calc(16px + env(safe-area-inset-bottom));
+  padding-left: calc(16px + env(safe-area-inset-left));
+  padding-right: calc(16px + env(safe-area-inset-right));
+  
   display: flex;
   justify-content: center;
 }
