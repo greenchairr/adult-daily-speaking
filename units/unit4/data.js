@@ -12,7 +12,7 @@ window.currentUnitData = {
     },
     {
       id: 2,
-      en: "I'm tired today.",
+      en: "I'm tired.",
       vi: "Sau một ngày dài chăm con, than nhẹ...",
       chunk: "Tired → I'm tired today.",
       cue: "Đặt tay lên trán 🥱",
