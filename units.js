@@ -18,5 +18,15 @@ window.allUnits = [
     id: 4, 
     title: "💬 Bài 4: Trò Chuyện Cùng Chồng", 
     path: "units/unit4/data.js" 
+  },
+  { 
+    id: 5, 
+    title: "🌳 Bài 5: Đi Dạo Cùng Con", 
+    path: "units/unit5/data.js" 
+  },
+  { 
+    id: 6, 
+    title: "🔑 Bài 6: Ra Ngoài Cùng Chồng", 
+    path: "units/unit6/data.js" 
   }
 ];
